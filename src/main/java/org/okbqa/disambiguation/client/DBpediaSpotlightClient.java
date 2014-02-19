@@ -36,7 +36,7 @@ import java.util.List;
  * @author pablomendes, Joachim Daiber
  */
 
-public class DBPediaSpotlightClient {
+public class DBpediaSpotlightClient {
 
     private final static String API_URL = "http://spotlight.dbpedia.org/";
 	private static final double CONFIDENCE = 0.0;
