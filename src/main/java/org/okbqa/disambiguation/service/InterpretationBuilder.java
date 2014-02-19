@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.okbqa.disambiguation.bean.Entity;
 import org.okbqa.disambiguation.bean.PseudoSPARQLTemplate;
-import org.okbqa.disambiguation.bean.TemplateInterpretation;
+import org.okbqa.disambiguation.bean.TemplateInterpretations;
 
 public interface InterpretationBuilder {
-	public abstract TemplateInterpretation interpret(PseudoSPARQLTemplate pst, List<Entity> entities);
+	public abstract TemplateInterpretations interpret(PseudoSPARQLTemplate pst, List<Entity> entities);
 }
