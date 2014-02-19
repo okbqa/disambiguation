@@ -26,5 +26,4 @@ public class SimpleInterpretationBuilder implements InterpretationBuilder {
 		
 		return ti;
 	}
-
 }

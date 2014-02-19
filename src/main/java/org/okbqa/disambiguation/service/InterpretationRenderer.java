@@ -7,6 +7,11 @@ import org.okbqa.disambiguation.bean.TemplateInterpretation;
 import org.okbqa.disambiguation.bean.TemplateInterpretations;
 
 public class InterpretationRenderer {
+	
+	public static String render(TemplateInterpretations ti) {
+		return render(ti, false);
+	}
+	
 	public static String render(TemplateInterpretations ti, boolean prettyPrint) {
 		int indent = prettyPrint ? 4 : 0;
 		
