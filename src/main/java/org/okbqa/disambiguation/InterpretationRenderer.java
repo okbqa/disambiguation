@@ -1,10 +1,10 @@
-package org.okbqa.disambiguation.service;
+package org.okbqa.disambiguation;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.okbqa.disambiguation.bean.EntityBinding;
-import org.okbqa.disambiguation.bean.TemplateInterpretation;
-import org.okbqa.disambiguation.bean.TemplateInterpretations;
+import org.okbqa.disambiguation.model.EntityBinding;
+import org.okbqa.disambiguation.model.TemplateInterpretation;
+import org.okbqa.disambiguation.model.TemplateInterpretations;
 
 public class InterpretationRenderer {
 	

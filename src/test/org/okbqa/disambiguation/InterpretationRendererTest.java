@@ -5,10 +5,10 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import org.junit.Test;
-import org.okbqa.disambiguation.bean.EntityBinding;
-import org.okbqa.disambiguation.bean.TemplateInterpretation;
-import org.okbqa.disambiguation.bean.TemplateInterpretations;
-import org.okbqa.disambiguation.service.InterpretationRenderer;
+import org.okbqa.disambiguation.InterpretationRenderer;
+import org.okbqa.disambiguation.model.EntityBinding;
+import org.okbqa.disambiguation.model.TemplateInterpretation;
+import org.okbqa.disambiguation.model.TemplateInterpretations;
 
 
 public class InterpretationRendererTest {

@@ -1,4 +1,4 @@
-package org.okbqa.disambiguation.bean;
+package org.okbqa.disambiguation.model;
 
 public class EntityBinding {
     private String variable;
@@ -11,6 +11,13 @@ public class EntityBinding {
     	this.value = value;
     	this.type = type;
     	this.score = score;
+    }
+    
+    public EntityBinding(String variable, Entity entity) {
+    	this.variable = variable;
+    	this.value = entity.getURI();
+    	this.type = entity.getType();
+    	this.score = entity.getScore();
     }
     
 	public String getVariable() {

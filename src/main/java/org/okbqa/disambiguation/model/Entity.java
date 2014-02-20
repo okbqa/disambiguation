@@ -1,11 +1,9 @@
-package org.okbqa.disambiguation.bean;
+package org.okbqa.disambiguation.model;
 
 import org.json.JSONObject;
 
 public class Entity {
 	private String URI;
-	
-	// TODO: entities may have many types
 	private String type;
 	private int start;
 	private int end;

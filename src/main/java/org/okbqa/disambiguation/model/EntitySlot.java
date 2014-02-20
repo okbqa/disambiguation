@@ -1,4 +1,4 @@
-package org.okbqa.disambiguation.bean;
+package org.okbqa.disambiguation.model;
 
 public class EntitySlot {
 	private String predicate;

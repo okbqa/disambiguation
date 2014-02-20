@@ -1,4 +1,4 @@
-package org.okbqa.disambiguation.bean;
+package org.okbqa.disambiguation.model;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,9 +1,7 @@
-package org.okbqa.disambiguation.service;
+package org.okbqa.disambiguation.rest;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.GET;
@@ -13,10 +11,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.json.JSONArray;
-import org.okbqa.disambiguation.bean.Entity;
-import org.okbqa.disambiguation.bean.PseudoSPARQLTemplate;
-import org.okbqa.disambiguation.bean.TemplateInterpretations;
+import org.okbqa.disambiguation.InterpretationRenderer;
+import org.okbqa.disambiguation.PseudoSPARQLTemplateParser;
+import org.okbqa.disambiguation.client.DBpediaSpotlightClient;
+import org.okbqa.disambiguation.client.SpotlightException;
+import org.okbqa.disambiguation.model.PseudoSPARQLTemplate;
+import org.okbqa.disambiguation.model.TemplateInterpretations;
 
 import com.sun.grizzly.http.SelectorThread;
 import com.sun.jersey.api.container.grizzly.GrizzlyWebContainerFactory;
@@ -34,25 +34,19 @@ public class DisambiguationWebService {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public String getResults(@QueryParam("data") String data, @QueryParam("endpoints") String endpoints) {
-        if(data == null) return "{}";
-        JSONArray endpointList = null;
-        if (endpoints != null) {
-            endpointList = new JSONArray(endpoints);
+        if(data == null) return "{\"message\":\"invalid input\"}";
+        
+        PseudoSPARQLTemplate template = PseudoSPARQLTemplateParser.parse(data);
+        
+        DBpediaSpotlightClient client = new DBpediaSpotlightClient();
+        
+        try {
+	        TemplateInterpretations tis = client.extract(template);
+	        
+	        return InterpretationRenderer.render(tis);
+        } catch (SpotlightException e) {
+        	return "{\"message\":\"" + e.getMessage().replace("\"", "\\\"") + "\"}";
         }
-        
-        Collection<PseudoSPARQLTemplate> templates = PseudoSPARQLTemplateParser.parse(data);
-        
-        // TODO: better way of selecting a template
-        //       perhaps this service should only receive one template as input
-        PseudoSPARQLTemplate first = templates.iterator().next();
-        
-        DisambiguationService ds = new DBpediaSpotlightDisambiguator();
-        List<Entity> entities = ds.disambiguate(first);
-        
-        InterpretationBuilder ib = new SimpleInterpretationBuilder();
-        TemplateInterpretations tis = ib.interpret(first, entities);
-        
-        return InterpretationRenderer.render(tis);
     }
 
     public static void main(String[] args) throws IOException {
