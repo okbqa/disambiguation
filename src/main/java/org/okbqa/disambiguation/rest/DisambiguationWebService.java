@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -33,21 +32,14 @@ public class DisambiguationWebService {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public String getResults(@QueryParam("data") String data, @QueryParam("endpoints") String endpoints) {
-    	System.out.println("got request");
-    	
         if(data == null) return "{\"message\":\"invalid input\"}";
         
         PseudoSPARQLTemplate template = PseudoSPARQLTemplateParser.parse(data);
-        
-        System.out.println("got template");
         
         DBpediaSpotlightClient client = new DBpediaSpotlightClient();
         
         try {
 	        TemplateInterpretations tis = client.extract(template);
-	        
-	        System.out.println("got interpretation");
-	        
 	        return InterpretationRenderer.render(tis);
         } catch (SpotlightException e) {
         	return "{\"message\":\"" + e.getMessage().replace("\"", "\\\"") + "\"}";
