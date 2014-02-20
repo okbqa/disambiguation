@@ -27,13 +27,15 @@ import org.okbqa.disambiguation.bean.Entity;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Simple web service-based annotation client for DBpedia Spotlight.
  *
- * @author pablomendes, Joachim Daiber
+ * @author pablomendes, Joachim Daiber, bdares
  */
 
 public class DBpediaSpotlightClient {
@@ -42,6 +44,9 @@ public class DBpediaSpotlightClient {
 	private static final double CONFIDENCE = 0.0;
 	private static final int SUPPORT = 0;
 
+	
+	// TODO: refactor client methods
+	
 	public List<Entity> extract(String text) throws AnnotationException {
 		String spotlightResponse;
 		
@@ -100,5 +105,64 @@ public class DBpediaSpotlightClient {
             }
 		}
 		return resources;
+	}
+	
+	
+	public Map<String, Entity> obtainMapping(String annotationXml) throws AnnotationException{
+		String spotlightResponse;
+		
+		CloseableHttpClient httpclient = HttpClients.createDefault();
+		HttpGet httpGet;
+		try {
+			httpGet = new HttpGet(API_URL + "rest/annotate/?" +
+					"spotter=SpotXmlParser" +
+					"&text=" + URLEncoder.encode(annotationXml, "utf-8"));
+			
+			httpGet.addHeader("Accept", "application/json");
+			CloseableHttpResponse response = httpclient.execute(httpGet);
+			
+			try {
+				spotlightResponse = response.getEntity().getContent().toString();
+			} catch (Exception e) {
+				throw new AnnotationException(e);
+			} finally {
+			    try {
+					response.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (Exception e) {
+			throw new AnnotationException(e);
+		}
+
+		assert spotlightResponse != null;
+		
+		JSONObject resultJSON = null;
+		JSONArray entities = null;
+
+		try {
+			resultJSON = new JSONObject(spotlightResponse);
+			entities = resultJSON.getJSONArray("Resources");
+		} catch (JSONException e) {
+			throw new AnnotationException(e);
+		}
+
+		Map<String, Entity> surfaceToUri = new HashMap<String, Entity>();
+		for(int i = 0; i < entities.length(); i++) {
+			try {
+				JSONObject entity = entities.getJSONObject(i);
+				String entityURI = entity.getString("@URI");
+				String surface = entity.getString("@surfaceForm");
+				int entityStart = new Integer(entity.getString("@offset"));
+				int entityEnd = entityStart + surface.length();
+				String entityType = entity.getString("@types").split(",")[0];
+
+				surfaceToUri.put(surface, new Entity(entityURI, entityStart, entityEnd, entityType));
+			} catch (JSONException e) {
+				throw new AnnotationException(e);
+            }
+		}
+		return surfaceToUri;
 	}
 }
