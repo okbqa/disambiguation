@@ -43,126 +43,98 @@ public class DBpediaSpotlightClient {
     private final static String API_URL = "http://spotlight.dbpedia.org/";
 	private static final double CONFIDENCE = 0.0;
 	private static final int SUPPORT = 0;
-
 	
-	// TODO: refactor client methods
-	
-	public List<Entity> extract(String text) throws AnnotationException {
-		String spotlightResponse;
-		
+	private String getResponse(String requestURI) throws SpotlightException{
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		HttpGet httpGet;
 		try {
-			httpGet = new HttpGet(API_URL + "rest/annotate/?" +
+			httpGet = new HttpGet(requestURI);
+			
+			httpGet.addHeader("Accept", "application/json");
+			CloseableHttpResponse response = httpclient.execute(httpGet);
+			
+			try {
+				return response.getEntity().getContent().toString();
+			} catch (Exception e) {
+				throw new SpotlightException(e);
+			} finally {
+			    try {
+					response.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (Exception e) {
+			throw new SpotlightException(e);
+		}
+	}
+
+	public List<Entity> extract(String text) throws AnnotationException {
+		try {
+			String spotlightResponse = getResponse(API_URL + "rest/annotate/?" +
 					"confidence=" + CONFIDENCE
 					+ "&support=" + SUPPORT
 					+ "&text=" + URLEncoder.encode(text, "utf-8"));
 			
-			httpGet.addHeader("Accept", "application/json");
-			CloseableHttpResponse response = httpclient.execute(httpGet);
-			
+			assert spotlightResponse != null;
+
+			JSONObject resultJSON = null;
+			JSONArray entities = null;
+
 			try {
-				spotlightResponse = response.getEntity().getContent().toString();
-			} catch (Exception e) {
+				resultJSON = new JSONObject(spotlightResponse);
+				entities = resultJSON.getJSONArray("Resources");
+			} catch (JSONException e) {
 				throw new AnnotationException(e);
-			} finally {
-			    try {
-					response.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 			}
+
+			List<Entity> resources = new LinkedList<Entity>();
+			for(int i = 0; i < entities.length(); i++) {
+				try {
+					JSONObject entity = entities.getJSONObject(i);
+					resources.add(Entity.fromJSON(entity));
+				} catch (JSONException e) {
+					throw new AnnotationException(e);
+	            }
+			}
+			return resources;
+
 		} catch (Exception e) {
 			throw new AnnotationException(e);
 		}
-
-		assert spotlightResponse != null;
-
-		JSONObject resultJSON = null;
-		JSONArray entities = null;
-
-		try {
-			resultJSON = new JSONObject(spotlightResponse);
-			entities = resultJSON.getJSONArray("Resources");
-		} catch (JSONException e) {
-			throw new AnnotationException(e);
-		}
-
-		List<Entity> resources = new LinkedList<Entity>();
-		for(int i = 0; i < entities.length(); i++) {
-			try {
-				JSONObject entity = entities.getJSONObject(i);
-				String entityURI = entity.getString("@URI");
-				int entityStart = new Integer(entity.getString("@offset"));
-				int entityEnd = entityStart + entity.getString("@surfaceForm").length();
-				
-				// TODO: entities may have many types
-				String entityType = entity.getString("@types").split(",")[0];
-				
-				resources.add(new Entity(entityURI, entityStart, entityEnd, entityType));
-			} catch (JSONException e) {
-				throw new AnnotationException(e);
-            }
-		}
-		return resources;
 	}
 	
 	
-	public Map<String, Entity> obtainMapping(String annotationXml) throws AnnotationException{
-		String spotlightResponse;
-		
-		CloseableHttpClient httpclient = HttpClients.createDefault();
-		HttpGet httpGet;
+	public Map<String, Entity> obtainMapping(String annotationXml) throws SpotlightException{
 		try {
-			httpGet = new HttpGet(API_URL + "rest/annotate/?" +
+			String spotlightResponse = getResponse(API_URL + "rest/annotate/?" +
 					"spotter=SpotXmlParser" +
 					"&text=" + URLEncoder.encode(annotationXml, "utf-8"));
 			
-			httpGet.addHeader("Accept", "application/json");
-			CloseableHttpResponse response = httpclient.execute(httpGet);
-			
+			JSONObject resultJSON = null;
+			JSONArray entities = null;
+
 			try {
-				spotlightResponse = response.getEntity().getContent().toString();
-			} catch (Exception e) {
-				throw new AnnotationException(e);
-			} finally {
-			    try {
-					response.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		} catch (Exception e) {
-			throw new AnnotationException(e);
-		}
-
-		assert spotlightResponse != null;
-		
-		JSONObject resultJSON = null;
-		JSONArray entities = null;
-
-		try {
-			resultJSON = new JSONObject(spotlightResponse);
-			entities = resultJSON.getJSONArray("Resources");
-		} catch (JSONException e) {
-			throw new AnnotationException(e);
-		}
-
-		Map<String, Entity> surfaceToUri = new HashMap<String, Entity>();
-		for(int i = 0; i < entities.length(); i++) {
-			try {
-				JSONObject entity = entities.getJSONObject(i);
-				String entityURI = entity.getString("@URI");
-				String surface = entity.getString("@surfaceForm");
-				int entityStart = new Integer(entity.getString("@offset"));
-				int entityEnd = entityStart + surface.length();
-				String entityType = entity.getString("@types").split(",")[0];
-
-				surfaceToUri.put(surface, new Entity(entityURI, entityStart, entityEnd, entityType));
+				resultJSON = new JSONObject(spotlightResponse);
+				entities = resultJSON.getJSONArray("Resources");
 			} catch (JSONException e) {
 				throw new AnnotationException(e);
-            }
+			}
+
+			Map<String, Entity> surfaceToUri = new HashMap<String, Entity>();
+			for(int i = 0; i < entities.length(); i++) {
+				try {
+					JSONObject entityJSON = entities.getJSONObject(i);
+					Entity entity = Entity.fromJSON(entityJSON);
+					surfaceToUri.put(entityJSON.getString("@surfaceForm"), entity);
+				} catch (JSONException e) {
+					throw new AnnotationException(e);
+	            }
+			}
+			return surfaceToUri;
+		
+		} catch (Exception e) {
+			throw new SpotlightException(e);
 		}
-		return surfaceToUri;
 	}
 }

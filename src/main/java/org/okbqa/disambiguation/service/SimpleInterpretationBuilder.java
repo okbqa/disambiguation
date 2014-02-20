@@ -32,7 +32,7 @@ public class SimpleInterpretationBuilder implements InterpretationBuilder {
 		List<String> resourceVariables = new ArrayList<String>();
 		for (EntitySlot es : pst.getSlots()) {
 			if (es.getPredicate().equals("is") &&
-					es.getObject().equals("rdf:resource"))
+					es.getObject().equals("rdf:Resource"))
 				resourceVariables.add(es.getSubject());
 		}
 		
@@ -69,7 +69,7 @@ public class SimpleInterpretationBuilder implements InterpretationBuilder {
 			
 			query = doc.toString();
 		} catch (Exception e) {
-			
+			query = "";
 		}
 		
 		// obtain matching Entity objects for above rdf:Resource variables

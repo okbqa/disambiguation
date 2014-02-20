@@ -1,5 +1,7 @@
 package org.okbqa.disambiguation.bean;
 
+import org.json.JSONObject;
+
 public class Entity {
 	private String URI;
 	
@@ -45,5 +47,14 @@ public class Entity {
 
 	public String getType() {
 		return this.type;
+	}
+	
+	public static Entity fromJSON(JSONObject json) {
+		String entityURI = json.getString("@URI");
+		String surface = json.getString("@surfaceForm");
+		int entityStart = new Integer(json.getString("@offset"));
+		int entityEnd = entityStart + surface.length();
+		String entityType = json.getString("@types").split(",")[0];
+		return new Entity(entityURI, entityStart, entityEnd, entityType);
 	}
 }
