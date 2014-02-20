@@ -85,7 +85,7 @@ public class SimpleInterpretationBuilder implements InterpretationBuilder {
 			for (String var : varToVerbalization.keySet()) {
 				Entity e = surfaceToUri.get(varToVerbalization.get(var));
 				
-				EntityBinding eb = new EntityBinding(var, e.getURI(), e.getType(), 0.5);
+				EntityBinding eb = new EntityBinding(var, e.getURI(), e.getType(), e.getScore());
 				bindings.add(eb);
 			}
 			

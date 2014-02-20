@@ -9,12 +9,14 @@ public class Entity {
 	private String type;
 	private int start;
 	private int end;
+	private double score;
     
-    public Entity (String URI, int start, int end, String type) {
+    public Entity (String URI, int start, int end, String type, double score) {
     	this.setURI(URI);
     	this.setStart(start);
     	this.setEnd(end);
     	this.setType(type);
+    	this.setScore(score);
     }
 
 	public void setType(String type) {
@@ -55,6 +57,15 @@ public class Entity {
 		int entityStart = new Integer(json.getString("@offset"));
 		int entityEnd = entityStart + surface.length();
 		String entityType = json.getString("@types").split(",")[0];
-		return new Entity(entityURI, entityStart, entityEnd, entityType);
+		double score = json.getDouble("@similarityScore");
+		return new Entity(entityURI, entityStart, entityEnd, entityType, score);
+	}
+
+	public double getScore() {
+		return score;
+	}
+
+	public void setScore(double score) {
+		this.score = score;
 	}
 }

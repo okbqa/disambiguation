@@ -122,6 +122,7 @@ public class DBpediaSpotlightClient {
 			}
 
 			Map<String, Entity> surfaceToUri = new HashMap<String, Entity>();
+			
 			for(int i = 0; i < entities.length(); i++) {
 				try {
 					JSONObject entityJSON = entities.getJSONObject(i);
