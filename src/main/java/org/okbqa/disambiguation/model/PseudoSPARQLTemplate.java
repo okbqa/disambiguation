@@ -1,12 +1,14 @@
 package org.okbqa.disambiguation.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PseudoSPARQLTemplate {
 	private String question;
 	private String pseudoQuery;
-	private List<EntitySlot> slots;
+	private List<EntitySlot> slots = new ArrayList<EntitySlot>();
 	private double score;
+	
 	public String getQuestion() {
 		return question;
 	}

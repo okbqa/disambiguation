@@ -16,6 +16,8 @@ package org.okbqa.disambiguation.client;
  * limitations under the License.
  */
 
+import org.apache.commons.codec.binary.StringUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -33,6 +35,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +45,11 @@ import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 /**
  * Simple web service-based annotation client for DBpedia Spotlight.
@@ -56,6 +64,7 @@ public class DBpediaSpotlightClient {
 	private static final int SUPPORT = 0;
 	
 	private String getResponse(String requestURI) throws SpotlightException{
+		
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		HttpGet httpGet;
 		try {
@@ -65,7 +74,9 @@ public class DBpediaSpotlightClient {
 			CloseableHttpResponse response = httpclient.execute(httpGet);
 			
 			try {
-				return response.getEntity().getContent().toString();
+				StringWriter writer = new StringWriter();
+				IOUtils.copy(response.getEntity().getContent(), writer, "utf-8");
+				return writer.toString();
 			} catch (Exception e) {
 				throw new SpotlightException(e);
 			} finally {
@@ -118,6 +129,7 @@ public class DBpediaSpotlightClient {
 	public TemplateInterpretations extract(PseudoSPARQLTemplate pst) throws SpotlightException{
 		TemplateInterpretations ret = new TemplateInterpretations();
 		TemplateInterpretation ti = new TemplateInterpretation();
+		ret.getInterpretations().add(ti);
 		List<EntityBinding> bindings = ti.getEntityBindings();
 		
 		// obtain variables that are rdf:Resource and their verbalizations
@@ -158,9 +170,13 @@ public class DBpediaSpotlightClient {
 				surfaceForm.setAttribute("name", verbalization);
 				surfaceForm.setAttribute("offset", String.valueOf(pst.getQuestion().indexOf(verbalization)));
 			}
-			
-			query = doc.toString();
+			Transformer transformer = TransformerFactory.newInstance().newTransformer();
+	        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			StreamResult result = new StreamResult(new StringWriter());
+			transformer.transform(new DOMSource(doc), result);
+			query = result.getWriter().toString();
 		} catch (Exception e) {
+			e.printStackTrace();
 			query = "";
 		}
 		
@@ -168,7 +184,6 @@ public class DBpediaSpotlightClient {
 			String spotlightResponse = getResponse(API_URL + "rest/annotate/?" +
 					"spotter=SpotXmlParser" +
 					"&text=" + URLEncoder.encode(query, "utf-8"));
-			
 			JSONObject resultJSON = null;
 			JSONArray entities = null;
 
@@ -187,7 +202,7 @@ public class DBpediaSpotlightClient {
 			}
 			
 		} catch (Exception e) {
-			
+			e.printStackTrace();
 		}
 		return ret;
 	}
